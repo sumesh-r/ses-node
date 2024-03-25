@@ -1,70 +1,56 @@
-// import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses"; // ES Modules import
-// const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses"); // CommonJS import
-
-// const { client } = require("./sesconfig");
 require("dotenv").config();
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 
-// Set the AWS Region.
-
-// const {
-//   SESv2Client,
-//   CreateEmailTemplateCommand,
-//   SendEmailCommand,
-// } = require("@aws-sdk/client-sesv2"); // ES Modules import
-const {
-  SESv2Client,
-  SendEmailCommand,
-  CreateEmailTemplateCommand,
-} = require("@aws-sdk/client-sesv2"); // CommonJS import
 const REGION = "ap-south-1"; //e.g. "us-ea st-1"
-const client = new SESv2Client({
+const ACCESS_KEY = process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID;
+const SECRET_KEY = process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY;
+
+const client = new SESClient({
   region: REGION,
   credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: ACCESS_KEY,
+    secretAccessKey: SECRET_KEY,
   },
 });
 
-// const template_input = { // CreateEmailTemplateRequest
-//   TemplateName: "Test-Template", // required
-//   TemplateContent: { // EmailTemplateContent
-//     Subject: "DUmmy sub",
-//     Text: "Random Text",
-//     Html: "<b>alsdfjalsjdfajsdf</b> alsdfjalfjdasdfjlafd",
-//   },
-// };
-// const template_command = new CreateEmailTemplateCommand(template_input);
-// const template_response = client.send(template_command);
+// subject of the email
+SUBJECT = "Amazon SES Test";
+// The email body for recipients with non-HTML email clients.
+BODY_TEXT =
+  "Amazon SES Test\r\nThis email was sent with Amazon SES using the AWS SDK.";
+// The HTML body of the email.
+BODY_HTML =
+  "<html><body><h1>Amazon SES Test</h1><p>This email was sent with <a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the AWS SDK</p></body></html>";
 
 const input = {
-  // SendEmailRequest
-  FromEmailAddress: "sumesh@m.thetechmaze.me", // required
+  Source: "example@somedomain.com", // email from which you want to send the email
   Destination: {
-    // Destination
-    ToAddresses: [
-      // AddressList
-      "rsumesh2020@gmail.com",
-    ],
+    ToAddresses: ["name@gmail.com"], // list of emails to send the mail
   },
-  Content: {
-    // EmailContent
-    Simple: {
-      // Message
-      Subject: {
-        // Content
-        Data: "From V2", // required
+  Message: {
+    Subject: {
+      Data: SUBJECT,
+      Charset: "UTF-8",
+    },
+    Body: {
+      Html: {
+        Data: BODY_HTML,
         Charset: "UTF-8",
       },
-      Body: {
-        // Body
-        Html: {
-          Data: "<b>Hello</b> World", // required
-          Charset: "UTF-8",
-        },
+      Text: {
+        Data: BODY_TEXT,
+        Charset: "UTF-8",
       },
     },
   },
-  ConfigurationSetName: "my-first-configuration-set",
+
+  ConfigurationSetName: "my-first-configuration-set", // get configuration set from you aws ses console
 };
-const command = new SendEmailCommand(input);
-const response = client.send(command);
+client
+  .send(new SendEmailCommand(input))
+  .then(() => {
+    console.log("Email Sent");
+  })
+  .catch((error) => {
+    console.log(error);
+  });
